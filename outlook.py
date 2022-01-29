@@ -22,10 +22,10 @@ import os
 
 class GenerateRandom:
     def random_char(self, y):
-        return ''.join(random.choice(string.ascii_letters) for x in range(y))
+        return ''.join(random.choice(string.ascii_letters) for _ in range(y))
 
     def nonce(self, length=4):
-        return ''.join([str(random.randint(0, 9)) for i in range(length)])
+        return ''.join([str(random.randint(0, 9)) for _ in range(length)])
 
 
 class Register:
@@ -44,7 +44,7 @@ class Register:
             print("No config.json found")
         self.outlook_url = "https://outlook.live.com/owa/?nlp=1&signup=1"
         self.chrome_options = Options()
-        if sys.platform == "linux" or sys.platform == "linux2":
+        if sys.platform in ["linux", "linux2"]:
             self.exe_path = "drivers/chromedriver"
             self.chrome_options.add_argument('--no-sandbox')
             self.chrome_options.add_argument('--headless')
@@ -85,10 +85,11 @@ class Register:
             proxy = self.get_proxy()
             self.chrome_options.add_argument('--proxy-server=socks://{}'.format(proxy))
             self.driver.get(self.outlook_url)
-            if self.page_has_loaded() is True:
-                if self.is_visible("CredentialsPageTitle") is True:
-                    pass
-                    print('Page Loaded')
+            if (
+                self.page_has_loaded() is True
+                and self.is_visible("CredentialsPageTitle") is True
+            ):
+                print('Page Loaded')
             first, last = self.fake.first_name().rstrip(), self.fake.last_name().rstrip()
             username = first + last + str(self.gen.nonce(5))
             password_input = self.user_password
@@ -136,15 +137,14 @@ class Register:
             src = img.get_attribute('src')
             filename = str(int(time.time())) + ".png"
             urlretrieve(src, filename)
-            file = open(filename, 'rb')
-            wait(0.5)
-            client = AnticaptchaClient(self.ac_token)
-            task = ImageToTextTask(file)
-            job = client.createTask(task)
-            print("Submitting Captcha")
-            job.join()
-            cap = job.get_captcha_text()
-            file.close()
+            with open(filename, 'rb') as file:
+                wait(0.5)
+                client = AnticaptchaClient(self.ac_token)
+                task = ImageToTextTask(file)
+                job = client.createTask(task)
+                print("Submitting Captcha")
+                job.join()
+                cap = job.get_captcha_text()
             os.remove(filename)
             wait(0.5)
             self.driver.find_element_by_tag_name("input").send_keys(cap)
@@ -167,7 +167,7 @@ if __name__ == "__main__":
     if regBot.password == "jmrevolution":
         with open(regBot.proxy_file) as f:
             proxies = f.readlines()
-            for i in range(baba):
+            for _ in range(baba):
                 regBot.make_outlook()
             print("Finished.")
     else:
